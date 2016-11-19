@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="stockMarket" class="stock.market.impl.SimpleStockMarket">
+        <constructor-arg value="#{dataLoader.loadData()}"/>
+        <constructor-arg ref="geometricMeanFunction"/>
+    </bean>
+
+    <bean id="dataLoader" class="stock.market.main.StockDataLoader">
+        <constructor-arg value="classpath:/stock.csv"/>
+        <constructor-arg ref="tradeStorageFactory"/>
+    </bean>
+
+    <bean id="geometricMeanFunction" class="stock.market.impl.DoubleBasedGeometricMeanFunctionWithLimitedPrecision"/>
+
+    <bean id="tradeStorageFactory" class="org.springframework.beans.factory.config.ServiceLocatorFactoryBean">
+        <property name="serviceLocatorInterface" value="stock.market.main.TradeStorageFactory"/>
+    </bean>
+
+    <bean id="tradeStorage" class="stock.market.impl.TradeStorageWithOverflowInsurance" scope="prototype">
+        <constructor-arg ref="duration5min"/>
+    </bean>
+
+    <bean id="duration5min" class="java.time.Duration" factory-method="ofMinutes">
+        <constructor-arg value="5" />
+    </bean>
+
+</beans>
