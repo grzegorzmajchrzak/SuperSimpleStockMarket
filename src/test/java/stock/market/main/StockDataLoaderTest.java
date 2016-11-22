@@ -9,13 +9,17 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import stock.market.impl.StockData;
 import stock.market.impl.StockOperations;
 import stock.market.impl.TradeStorage;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.util.Map;
+import java.util.function.Function;
 
+import static java.util.Collections.singletonMap;
 import static org.fest.assertions.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -35,7 +39,8 @@ public class StockDataLoaderTest {
     @Before
     public void setUp() throws Exception {
         tempFile = folder.newFile();
-        dataLoader = new StockDataLoader(tempFile.toURI(), tradeStorageFactory);
+        Map<String, Function<StockData, BigDecimal>> typeToDividedFactorFunction = singletonMap("Common", mock(Function.class));
+        dataLoader = new StockDataLoader(tempFile.toURI(), tradeStorageFactory, typeToDividedFactorFunction);
 
         when(tradeStorageFactory.create()).thenReturn(mock(TradeStorage.class));
     }
@@ -45,7 +50,7 @@ public class StockDataLoaderTest {
         //given
         String fileContent = "Stock Symbol,Type,Last Dividend,Fixed Dividend,Par Value\n"
                 + "TEA,Common,0,,100";
-        Files.write(tempFile.toPath(),fileContent.getBytes());
+        Files.write(tempFile.toPath(), fileContent.getBytes());
         //when
         Map<String, StockOperations> result = dataLoader.loadData();
         //then
@@ -58,7 +63,7 @@ public class StockDataLoaderTest {
     public void shouldReportProblemIfFileCannotBeParsed() throws Exception {
         String fileContent = "Stock Symbol,Type,Last Dividend,Fixed Dividend,Par Value\n"
                 + "TEA,Unknown,0,,100";
-        Files.write(tempFile.toPath(),fileContent.getBytes());
+        Files.write(tempFile.toPath(), fileContent.getBytes());
 
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("cannot load data from source");

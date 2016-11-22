@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -23,18 +22,12 @@ public class StockDataLoader {
     private final URI csvFileLocation;
     private final TradeStorageFactory tradeStorageFactory;
 
-    private final Map<String, Function<StockData, BigDecimal>> typeToDividedYieldFunction = new HashMap<>();
+    private final Map<String, Function<StockData, BigDecimal>> typeToDividedFactorFunction;
 
-    public StockDataLoader(URI csvFileLocation, TradeStorageFactory tradeStorageFactory) {
+    public StockDataLoader(URI csvFileLocation, TradeStorageFactory tradeStorageFactory, Map<String, Function<StockData, BigDecimal>> typeToDividedYieldFunction) {
         this.csvFileLocation = csvFileLocation;
         this.tradeStorageFactory = tradeStorageFactory;
-
-        init();
-    }
-
-    private void init() {
-        typeToDividedYieldFunction.put("Common", StockData::getLastDividend);
-        typeToDividedYieldFunction.put("Preferred", s -> s.getFixedDividend().multiply(s.getParValue()));
+        this.typeToDividedFactorFunction = typeToDividedYieldFunction;
     }
 
     public Map<String, StockOperations> loadData() throws IOException {
@@ -58,7 +51,7 @@ public class StockDataLoader {
         BigDecimal fixedDividend = toBigDecimal(columns[3]);
         BigDecimal parValue = toBigDecimal(columns[4]);
         StockData stockData = new StockData(lastDividend, fixedDividend, parValue);
-        return new BasicStockOperations(typeToDividedYieldFunction.get(type), stockData, tradeStorageFactory.create());
+        return new BasicStockOperations(typeToDividedFactorFunction.get(type), stockData, tradeStorageFactory.create());
     }
 
     private BigDecimal toBigDecimal(String value) {

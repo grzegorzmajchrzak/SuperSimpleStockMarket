@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="
-        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/util
+        http://www.springframework.org/schema/util/spring-util.xsd">
 
     <bean id="stockMarket" class="stock.market.impl.SimpleStockMarket">
         <constructor-arg value="#{dataLoader.loadData()}"/>
@@ -12,6 +16,7 @@
     <bean id="dataLoader" class="stock.market.main.StockDataLoader">
         <constructor-arg value="classpath:/stock.csv"/>
         <constructor-arg ref="tradeStorageFactory"/>
+        <constructor-arg ref="stockTypeToDividendAactorFunction"/>
     </bean>
 
     <bean id="geometricMeanFunction" class="stock.market.impl.DoubleBasedGeometricMeanFunctionWithLimitedPrecision"/>
@@ -27,5 +32,10 @@
     <bean id="duration5min" class="java.time.Duration" factory-method="ofMinutes">
         <constructor-arg value="5" />
     </bean>
+
+    <util:map id="stockTypeToDividendAactorFunction">
+        <entry key="Common"><bean class="stock.market.impl.CommonDividedFactorFunction"/></entry>
+        <entry key="Preferred"><bean class="stock.market.impl.PreferredDividedFactorFunction"/></entry>
+    </util:map>
 
 </beans>
